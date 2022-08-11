@@ -1,0 +1,26 @@
+[package]
+name = "soroban-debenture-contract"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+doctest = false
+
+[features]
+default = ["export"]
+export = []
+testutils = ["soroban-sdk/testutils"]
+
+[dependencies]
+soroban-sdk = { version = "0.0.3", features = ["testutils"] }
+sha2 = { version = "0.10.2", optional = true }
+stellar-xdr = { version = "0.0.1", features = ["next", "std"] }
+chrono = { version = "0.4.20" }
+ed25519-dalek = { version = "1.0.1" }
+rand = "0.8.5"
+
+# [dev_dependencies]
+# soroban-debenture-contract = { path = ".", default-features = false, features = ["testutils"] }

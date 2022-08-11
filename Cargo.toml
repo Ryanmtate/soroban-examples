@@ -8,6 +8,7 @@ members = [
     "cross_contract_calls",
     "liquidity_pool",
     "single_offer",
+    "debenture"
 ]
 
 [profile.release]
