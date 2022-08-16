@@ -16,6 +16,7 @@ testutils = ["soroban-sdk/testutils"]
 
 [dependencies]
 soroban-sdk = { version = "0.0.3", features = ["testutils"] }
+soroban-token-contract = { version = "0.0.2", default-features = false  }
 sha2 = { version = "0.10.2", optional = true }
 stellar-xdr = { version = "0.0.1", features = ["next", "std"] }
 chrono = { version = "0.4.20" }

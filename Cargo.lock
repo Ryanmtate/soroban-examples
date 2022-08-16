@@ -574,6 +574,7 @@ dependencies = [
  "rand 0.8.5",
  "sha2 0.10.2",
  "soroban-sdk",
+ "soroban-token-contract",
  "stellar-xdr",
 ]
 

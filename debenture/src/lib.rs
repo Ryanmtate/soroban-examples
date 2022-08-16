@@ -1,10 +1,14 @@
 #![no_std]
 
+#[cfg(feature = "testutils")]
+extern crate std;
+
 #[cfg(test)]
 mod tests;
 
 use core::ops::Div;
 
+use chrono::format::Fixed;
 use soroban_sdk::{
     contractimpl, BigInt, Binary, Env, EnvType, FixedBinary, IntoVal, RawVal, Symbol, Vec,
 };
@@ -79,8 +83,8 @@ impl IntoVal<Env, RawVal> for CouponPaymentFrequency {
  *
  */
 pub trait Debenture {
-    // Issue a new debenture, this is the initialization of the debenture contract.
-    // Coupon rate is specified as basis points per annum.
+    /// Issue a new debenture, this is the initialization of the debenture contract.
+    /// Coupon rate is specified as basis points per annum.
     fn issue(
         e: Env,
         maturity: BigInt,
@@ -90,14 +94,23 @@ pub trait Debenture {
         debenture_holder: FixedBinary<32>,
     );
 
-    // Return the maturity date of the debenture
+    // /// Return the maturity date of the debenture
     fn maturity(e: Env) -> BigInt;
 
-    // Return the par value of the debenture
+    /// Return the par value of the debenture
     fn par_value(e: Env) -> BigInt;
 
-    // Return the coupon payment for the current period.
-    // fn coupon_payment(e: Env) -> BigInt;
+    // /// Return the coupon rate of the debenture
+    // fn coupon_rate(e: Env) -> BigInt;
+
+    // /// Return the coupon payment frequency of the debenture
+    // fn coupon_frequency(e: Env) -> u32;
+
+    // /// Return the debenture holder
+    // fn debenture_holder(e: Env) -> FixedBinary<32>;
+
+    /// Return the coupon payment for the current period.
+    fn coupon_payment(e: Env, timestamp: BigInt) -> BigInt;
 }
 
 fn get_maturity(e: &Env) -> BigInt {
@@ -121,24 +134,29 @@ fn get_coupon_rate(e: &Env) -> BigInt {
         .unwrap()
 }
 
-fn get_coupon_payment_frequency(e: &Env) -> u32 {
+fn get_coupon_frequency(e: &Env) -> u32 {
     e.contract_data()
         .get(DataKey::CouponPaymentFrequency)
         .unwrap_or(Ok(0))
         .unwrap()
 }
 
+fn get_debenture_holder(e: &Env) -> FixedBinary<32> {
+    e.contract_data()
+        .get(DataKey::DebentureHolder)
+        .unwrap_or(Ok(FixedBinary::from_array(e, [0u8; 32])))
+        .unwrap()
+}
+
 // Calculate the coupon payment for the debenture
-fn calculate_coupon_payment(e: &Env, timestamp: i64) -> BigInt {
+fn get_coupon_payment(e: &Env, timestamp: BigInt) -> BigInt {
     let maturity = get_maturity(e);
     let par_value = get_par_value(e);
     let coupon_rate = get_coupon_rate(e);
-    let payment_frequency =
-        CouponPaymentFrequency::from(get_coupon_payment_frequency(e)).into_big_int(e);
+    let payment_frequency = CouponPaymentFrequency::from(get_coupon_frequency(e)).into_big_int(e);
 
     // Return zero if the maturity has expired
-    let now = BigInt::from_i64(e, timestamp);
-    if now > maturity {
+    if timestamp > maturity {
         return BigInt::zero(e);
     }
 
@@ -179,14 +197,13 @@ impl Debenture for DebentureContract {
         get_maturity(&e)
     }
 
-    // fn coupon_payment(e: Env) -> BigInt {
-    //     // NOTE: need to identify how to create a timestamp from the env.
-    //     todo!()
+    // fn coupon_frequency(e: Env) -> u32 {
+    //     get_coupon_frequency(&e)
     // }
 
     // // Get the coupon rate of the debenture.
-    // fn get_coupon_rate(e: Env) -> u32 {
-    //     e.contract_data().get(COUPON_RATE).unwrap()
+    // fn coupon_rate(e: Env) -> BigInt {
+    //     get_coupon_rate(&e)
     // }
 
     // Get the par value of the debenture.
@@ -195,7 +212,11 @@ impl Debenture for DebentureContract {
     }
 
     // // Get the address of the holder of the debenture.
-    // fn get_debenture_holder(e: Env) -> FixedBinary<32> {
-    //     e.contract_data().get(DEBENTURE_HOLDER).unwrap()
+    // fn debenture_holder(e: Env) -> FixedBinary<32> {
+    //     get_debenture_holder(&e)
     // }
+
+    fn coupon_payment(e: Env, timestamp: BigInt) -> BigInt {
+        get_coupon_payment(&e, timestamp)
+    }
 }

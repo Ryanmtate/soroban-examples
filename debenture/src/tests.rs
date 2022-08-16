@@ -14,7 +14,7 @@ fn generate_contract_id() -> [u8; 32] {
 #[test]
 fn test() {
     let env = Env::default();
-    let contract_id = FixedBinary::from_array(&env, [0; 32]);
+    let contract_id = FixedBinary::from_array(&env, generate_contract_id());
     env.register_contract(&contract_id, DebentureContract);
 
     let maturity = BigInt::from_i64(
@@ -36,4 +36,10 @@ fn test() {
         &(CouponPaymentFrequency::Annually as u32),
         &debenture_holder,
     );
+
+    // return the maturity of the debenture
+    let retrieved_maturity = maturity::invoke(&env, &contract_id);
+
+    // assert the maturity is correct
+    assert_eq!(maturity, retrieved_maturity, "maturity is incorrect");
 }
